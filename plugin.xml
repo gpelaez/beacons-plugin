@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="me.gpelaez.cordova.plugins.ibeacon"
+    version="0.0.1">
+
+    <name>IBeacons Handler</name>
+    <description>iBeacons Handle Plugin</description>
+    <license>MIT</license>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <js-module src="www/iBeacon.js" name="iBeacon">
+        <clobbers target="window.plugins.ibeacon" />
+    </js-module>
+
+	<platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="GPIBeacon">
+                <param name="ios-package" value="GPIBeacon" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <header-file src="src/ios/GPIBeacon.h" />
+        <source-file src="src/ios/GPIBeacon.m" />
+
+        <framework src="CoreLocation.framework" />
+        <!-- <framework src="AudioToolbox.framework" /> -->
+    </platform>
+
+    <platform name="android">
+
+        <source-file src="src/android/GPIBeacon.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
+        <source-file src="src/android/BeaconNotificationHandler.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
+
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="GPIBeacon">
+                <param name="android-package" value="me.gpelaez.cordova.plugins.ibeacon.GPIBeacon" />
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+        <!-- <source-file src="src/android/AndroidIBeaconLibrary.jar" target-dir="libs"/> -->
+        <source-file src="src/android/android-ibeacon-library.jar" target-dir="libs"/>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.BLUETOOTH"/>
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <service android:enabled="true"
+                android:exported="true"
+                android:isolatedProcess="false"
+                android:label="iBeacon"
+                android:name="com.radiusnetworks.ibeacon.service.IBeaconService">
+            </service>
+            <service android:enabled="true"
+                android:name="com.radiusnetworks.ibeacon.IBeaconIntentProcessor">
+                    <meta-data android:name="background" android:value="true" />
+                <intent-filter
+                   android:priority="1" >
+                    <action android:name="$PACKAGE_NAME.DID_RANGING" />
+                    <action android:name="$PACKAGE_NAME.DID_MONITORING" />
+                </intent-filter>
+            </service>
+            <activity android:name="net.yoik.cordova.plugins.ibeacon.BeaconNotificationHandler"/>
+        </config-file>
+
+    </platform>
+
+</plugin>
