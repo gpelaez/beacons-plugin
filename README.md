@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 cordova-yoik-ibeacon
 ===============
 
@@ -61,3 +62,9 @@ Called when a region is exited.
             identifier: 'com.mydomain.ibeacon.myregion'
         }
     }
+=======
+cordova-plugin-ibeacon
+======================
+
+ios and android support
+>>>>>>> d1e952989bea58485fedd27c4175679ecc01b5b7
