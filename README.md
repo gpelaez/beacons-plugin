@@ -1,10 +1,13 @@
-<<<<<<< HEAD
-cordova-yoik-ibeacon
-===============
+iBeacon plugin.
 
-A very incomplete, iBeacon plugin.
+<!-- Immediate proximity has proven to be flakey on both ios and android, so have added a new custom proximity "nigh" which is based purely on the rssi being greater than -30.  This implementation meets our current requirement however further testing is required against multiple devices/beacon types and with phone cases.  Unfortunately it's an unknown at this stage. This can not currently be configured on the JS side but support will be added in future to control/setup notifications via javascript.
+ -->
+ Plugin to launch notifications to the user based on iBeacon. 
+ When user enters iBeacon region, the app launches a local notification with the title and message set in the iBeacon region. 
 
-Immediate proximity has proven to be flakey on both ios and android, so have added a new custom proximity "nigh" which is based purely on the rssi being greater than -30.  This implementation meets our current requirement however further testing is required against multiple devices/beacon types and with phone cases.  Unfortunately it's an unknown at this stage. This can not currently be configured on the JS side but support will be added in future to control/setup notifications via javascript.
+# Installation
+    
+    cordova plugin add https://github.com/gustavopelaezrpo/cordova-plugin-ibeacon.git
 
 # Watch a region/UUID
     cordova.plugins.ibeacon.addRegion(
@@ -19,7 +22,10 @@ Immediate proximity has proven to be flakey on both ios and android, so have add
         // Params
         { 
             identifier: 'com.mydomain.ibeacon.myregion', 
-            uuid: 'MY-UUID'
+            uuid: 'MY-UUID',
+            major: <beacon-major>,
+            minor: <beacon-minor>,
+            title: <title-for-local-notifications>
         }
     );
 
@@ -62,9 +68,5 @@ Called when a region is exited.
             identifier: 'com.mydomain.ibeacon.myregion'
         }
     }
-=======
-cordova-plugin-ibeacon
-======================
 
 ios and android support
->>>>>>> d1e952989bea58485fedd27c4175679ecc01b5b7
