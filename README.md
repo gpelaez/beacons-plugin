@@ -7,7 +7,7 @@ iBeacon plugin.
 
 # Installation
     
-    cordova plugin add https://github.com/gustavopelaezrpo/cordova-plugin-ibeacon.git
+    cordova plugin add https://github.com/gustavopelaezrpo/beacons-plugin.git
 
 # Watch a region/UUID
     cordova.plugins.ibeacon.addRegion(
