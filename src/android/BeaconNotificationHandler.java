@@ -33,8 +33,6 @@ public class BeaconNotificationHandler extends Activity{
 			e.printStackTrace();
 		}
 
-		GPIBeacon.cancelNotification(this);
-
 		finish();
 
 		if (!isBeaconPluginActive) {
@@ -49,7 +47,6 @@ public class BeaconNotificationHandler extends Activity{
 	private void processBeaconNotification(boolean isBeaconPluginActive) throws JSONException
 	{
 		Bundle extras = getIntent().getExtras();
-		
 
 		if (extras != null)	{
 			JSONObject beacon = new JSONObject(extras.getBundle("beacon").getString("json"));
@@ -58,6 +55,7 @@ public class BeaconNotificationHandler extends Activity{
             beacon.put("coldstart", !isBeaconPluginActive);
 
 			GPIBeacon.performJSEvent(beacon.getString("event"),beacon);
+			GPIBeacon.cancelNotification(this,beacon.getInt("identifier"));
 		}
 	}
 	/**

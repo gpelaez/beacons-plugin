@@ -2,12 +2,11 @@ iBeacon plugin.
 
 <!-- Immediate proximity has proven to be flakey on both ios and android, so have added a new custom proximity "nigh" which is based purely on the rssi being greater than -30.  This implementation meets our current requirement however further testing is required against multiple devices/beacon types and with phone cases.  Unfortunately it's an unknown at this stage. This can not currently be configured on the JS side but support will be added in future to control/setup notifications via javascript.
  -->
- Plugin to launch notifications to the user based on iBeacon. 
- When user enters iBeacon region, the app launches a local notification with the title and message set in the iBeacon region. 
+ This plugin allows you to send notifications triggered by the proximity to Bluetooth LE iBeacons; this plugin works on android an ios cordova apps
 
 # Installation
     
-    cordova plugin add https://github.com/gustavopelaezrpo/beacons-plugin.git
+    cordova plugin add https://github.com/gpelaez/beacons-plugin.git
 
 # Watch a region/UUID
     cordova.plugins.ibeacon.addRegion(
@@ -30,7 +29,8 @@ iBeacon plugin.
     );
 
 # Events
-All events are called on the document object.
+All events are called on the document object. Sample code:
+    document.addEventListener('ibeacon')
 
 ## ibeacon
 Called when in beacon proximity

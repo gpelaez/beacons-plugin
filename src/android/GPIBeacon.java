@@ -305,12 +305,19 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
                     .setDefaults(Notification.DEFAULT_ALL)
+                    .setWhen(System.currentTimeMillis())
+                    .setTicker(json.getString("message"))
+                    .setContentTitle(json.getString("title"))
+                    .setContentText(json.getString("message"))
+                    .setSmallIcon(context.getApplicationInfo().icon);
+/*                new NotificationCompat.Builder(context)
+                    .setDefaults(Notification.DEFAULT_ALL)
                     .setSmallIcon(context.getApplicationInfo().icon)
                     .setWhen(System.currentTimeMillis())
                     .setTicker(json.getString("title"))
                     .setContentTitle(json.getString("message"))
                     .setContentIntent(contentIntent);
-        
+*/        
         String message = json.getString("message");
         if (message != null) {
             mBuilder.setContentText(message);
@@ -320,7 +327,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
         mBuilder.addAction(context.getApplicationInfo().icon, json.getString("message"), contentIntent);
         
         ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-            .notify((String) getAppName(context), NOTIFICATION_ID, mBuilder.build());
+            .notify((String) getAppName(context), NOTIFICATION_ID + json.getInt("identifier"), mBuilder.build());
     }
     @Override
     public void didExitRegion(Region region) {
@@ -451,10 +458,10 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
                 return "unknown";
         }
     }
-    public static void cancelNotification(Context context)
+    public static void cancelNotification(Context context, int beaconId)
     {
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.cancel((String)getAppName(context), NOTIFICATION_ID);  
+        mNotificationManager.cancel((String)getAppName(context), NOTIFICATION_ID + beaconId);  
     }
     private static String getAppName(Context context)
     {
