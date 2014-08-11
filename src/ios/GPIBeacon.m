@@ -62,19 +62,21 @@ static int NIGH_PROXIMITY = -30;
         NSString* identifier = [dictionary objectForKey:@"identifier"];
 
         CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid major:major minor:minor identifier:identifier];
-        
-        NSLog(@"added region.. %@", [myRegion description]);
-
-
-        [self.beaconDict setObject:dictionary forKey:identifier];
-        [self.locationManager startMonitoringForRegion: myRegion];
-
-        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+        if(myRegion) {
+            [self.beaconDict setObject:dictionary forKey:identifier];
+            [self.locationManager startMonitoringForRegion: myRegion];
+            
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+            
+            NSLog(@"Region added: %@", [myRegion description]);
+        }
     }
     @catch (NSException * e) {
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+        
+//        NSLog(@"Error adding region: %@", [myRegion description]);
     }
 }
 
@@ -84,34 +86,34 @@ static int NIGH_PROXIMITY = -30;
 
 - (void)locationManager:(CLLocationManager*)manager didEnterRegion:(CLRegion*)region
 {
-    NSLog(@"Entered region..%@", region.identifier);
-    NSDictionary* beacon = [self.beaconDict objectForKey:region.identifier];
-    
-    UIAlertView* alert =[[UIAlertView alloc] initWithTitle:[beacon objectForKey:@"title"] message:[beacon objectForKey:@"message"] delegate:self cancelButtonTitle:@"Cancelar" otherButtonTitles:nil];
-    [alert show];
-    
-//    Do not range beacons... just notify when ibeacon found. Battery consumption issues.
-//    [self.locationManager startRangingBeaconsInRegion: self.beaconDict[region.identifier]];
-
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    [result setObject:beacon forKey:@"ibeacon"];
-
-    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [beacon JSONString]];
-    [self.commandDelegate evalJs:jsStatement];
+    if([region isKindOfClass:[CLBeaconRegion class]]) {
+        //        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
+        NSLog(@"Entered region..%@", region.identifier);
+        NSDictionary* beacon = [self.beaconDict objectForKey:region.identifier];
+        
+        UIAlertView* alert =[[UIAlertView alloc] initWithTitle:[beacon objectForKey:@"title"] message:[beacon objectForKey:@"message"] delegate:self cancelButtonTitle:@"Cancelar" otherButtonTitles:nil];
+        [alert show];
+        NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+        [result setObject:beacon forKey:@"ibeacon"];
+        
+        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [beacon JSONString]];
+        [self.commandDelegate evalJs:jsStatement];
+    }
 }
 
 -(void)locationManager:(CLLocationManager*)manager didExitRegion:(CLRegion*)region
 {
-    NSLog(@"Exited region..%@", region.identifier);
-    [self.locationManager stopRangingBeaconsInRegion: self.beaconDict[region.identifier]];
+    //    Do not range beacons... just notify when ibeacon found. Battery consumption issues.
+    if([region isKindOfClass:[CLBeaconRegion class]]) {
+        NSLog(@"Exited region..%@", region.identifier);
+        // [self.locationManager stopRangingBeaconsInRegion: self.beaconDict[region.identifier]];
 
-    NSMutableDictionary *inner = [[NSMutableDictionary alloc] init];
-    [inner setObject:region.identifier forKey:@"identifier"];
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    [result setObject:inner forKey:@"ibeacon"];
+        NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+        [result setObject:beacon forKey:@"ibeacon"];
 
-    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconexit', %@);", [result JSONString]];
-    [self.commandDelegate evalJs:jsStatement];
+        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconexit', %@);", [result JSONString]];
+        [self.commandDelegate evalJs:jsStatement];
+    }
 }
 
 -(void)locationManager:(CLLocationManager*)manager
@@ -160,20 +162,24 @@ static int NIGH_PROXIMITY = -30;
 {
     NSLog(@"Sending event");
     // You can retrieve the beacon data from its properties
-    NSString *uuid = foundBeacon.proximityUUID.UUIDString;
-    NSString *major = [NSString stringWithFormat:@"%@", foundBeacon.major];
-    NSString *minor = [NSString stringWithFormat:@"%@", foundBeacon.minor];
 
-    NSMutableDictionary *inner = [[NSMutableDictionary alloc] init];
+    // NSString *uuid = foundBeacon.proximityUUID.UUIDString;
+    // NSString *major = [NSString stringWithFormat:@"%@", foundBeacon.major];
+    // NSString *minor = [NSString stringWithFormat:@"%@", foundBeacon.minor];
 
-    [inner setObject: [uuid lowercaseString] forKey:@"uuid"];
-    [inner setObject: major forKey:@"major"];
-    [inner setObject: minor forKey:@"minor"];
-    [inner setObject: range forKey:@"range"];
-    [inner setObject:region.identifier forKey:@"identifier"];
+    // NSMutableDictionary *inner = [[NSMutableDictionary alloc] init];
+
+    // [inner setObject: [uuid lowercaseString] forKey:@"uuid"];
+    // [inner setObject: major forKey:@"major"];
+    // [inner setObject: minor forKey:@"minor"];
+    // [inner setObject: range forKey:@"range"];
+    // [inner setObject:region.identifier forKey:@"identifier"];
+
+    // NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+    // [result setObject:inner forKey:@"ibeacon"];
 
     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    [result setObject:inner forKey:@"ibeacon"];
+    [result setObject:beacon forKey:@"ibeacon"];
 
     NSLog(@"%@", [result JSONString]);
 
@@ -185,8 +191,10 @@ static int NIGH_PROXIMITY = -30;
 
 - (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region
 {
-    NSLog(@"hello %@", region.identifier);
-    [self.locationManager startRangingBeaconsInRegion: self.beaconDict[region.identifier]];
+//    NSLog(@"hello %@", region.identifier);
+    if([region isKindOfClass:[CLBeaconRegion class]]) {
+//        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
+    }
 }
 
 - (void)locationManager: (CLLocationManager *)manager
