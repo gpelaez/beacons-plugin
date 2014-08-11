@@ -106,6 +106,7 @@ static int NIGH_PROXIMITY = -30;
     //    Do not range beacons... just notify when ibeacon found. Battery consumption issues.
     if([region isKindOfClass:[CLBeaconRegion class]]) {
         NSLog(@"Exited region..%@", region.identifier);
+        NSDictionary* beacon = [self.beaconDict objectForKey:region.identifier];
         // [self.locationManager stopRangingBeaconsInRegion: self.beaconDict[region.identifier]];
 
         NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
@@ -177,7 +178,8 @@ static int NIGH_PROXIMITY = -30;
 
     // NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
     // [result setObject:inner forKey:@"ibeacon"];
-
+    
+    NSDictionary* beacon = [self.beaconDict objectForKey:region.identifier];
     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
     [result setObject:beacon forKey:@"ibeacon"];
 
