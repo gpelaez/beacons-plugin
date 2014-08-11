@@ -324,7 +324,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
         } else {
             mBuilder.setContentText("<missing message content>");
         }
-        mBuilder.addAction(context.getApplicationInfo().icon, json.getString("message"), contentIntent);
+        mBuilder.addAction(context.getApplicationInfo().icon, 'Ver mas', contentIntent);
         
         ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
             .notify((String) getAppName(context), NOTIFICATION_ID + json.getInt("identifier"), mBuilder.build());

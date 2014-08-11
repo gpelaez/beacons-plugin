@@ -25,7 +25,6 @@ SOFTWARE.
 #import "GPIBeacon.h"
 #import <Cordova/CDVJSON.h>
 
-
 #pragma mark -
 #pragma mark GPIBeacon
 
@@ -55,13 +54,19 @@ static int NIGH_PROXIMITY = -30;
 
     @try {
         NSArray* arguments = command.arguments;
-        NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[arguments objectAtIndex:1]];
-        NSString* identifier = [arguments objectAtIndex:0];
-        NSLog(@"added region.. %@", [arguments objectAtIndex:1]);
+        NSDictionary* dictionary = [arguments objectAtIndex:0];
+//        NSString* strUUID = [dictionary objectForKey:@"uuid"];
+        NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[dictionary objectForKey:@"uuid"]];
+        int major =  [[NSString stringWithString:[dictionary objectForKey:@"major"]] intValue];
+        int minor =  [[NSString stringWithString:[dictionary objectForKey:@"minor"]] intValue];
+        NSString* identifier = [dictionary objectForKey:@"identifier"];
 
-        CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid identifier:identifier];
+        CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid major:major minor:minor identifier:identifier];
+        
+        NSLog(@"added region.. %@", [myRegion description]);
 
-        [self.beaconDict setObject:myRegion forKey:identifier];
+
+        [self.beaconDict setObject:dictionary forKey:identifier];
         [self.locationManager startMonitoringForRegion: myRegion];
 
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
@@ -80,14 +85,18 @@ static int NIGH_PROXIMITY = -30;
 - (void)locationManager:(CLLocationManager*)manager didEnterRegion:(CLRegion*)region
 {
     NSLog(@"Entered region..%@", region.identifier);
-    [self.locationManager startRangingBeaconsInRegion: self.beaconDict[region.identifier]];
+    NSDictionary* beacon = [self.beaconDict objectForKey:region.identifier];
+    
+    UIAlertView* alert =[[UIAlertView alloc] initWithTitle:[beacon objectForKey:@"title"] message:[beacon objectForKey:@"message"] delegate:self cancelButtonTitle:@"Cancelar" otherButtonTitles:nil];
+    [alert show];
+    
+//    Do not range beacons... just notify when ibeacon found. Battery consumption issues.
+//    [self.locationManager startRangingBeaconsInRegion: self.beaconDict[region.identifier]];
 
-    NSMutableDictionary *inner = [[NSMutableDictionary alloc] init];
-    [inner setObject:region.identifier forKey:@"identifier"];
     NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    [result setObject:inner forKey:@"ibeacon"];
+    [result setObject:beacon forKey:@"ibeacon"];
 
-    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [result JSONString]];
+    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [beacon JSONString]];
     [self.commandDelegate evalJs:jsStatement];
 }
 
