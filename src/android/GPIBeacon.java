@@ -80,6 +80,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
     private boolean gForeground = false;
     private static CordovaWebView gWebView;
     private static Hashtable<String,JSONObject> beaconsData;
+    private static ArrayList<String> itemsNotification = new ArrayList<String>(); 
 
     private IBeaconManager iBeaconManager;
 
@@ -89,7 +90,6 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
     private Boolean firstNearFar;
 
     private CallbackContext callbackContext;
-    private static ArrayList<String> itemsNotification = new ArrayList<String>(); 
     
     
     @Override
@@ -251,29 +251,37 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
             result.put("event", "ibeaconenter");
             
             if (this.gForeground) {
-            	
+                
                   performJSEvent(result.getString("event"),result);  
             } else {
                 result.put("title", obj.getString("title"));
                 result.put("message", obj.getString("message"));
-                itemsNotification.add(obj.getString("title"));
+                itemsNotification.add(obj.getString("identifier"));
                 createNotification(this.getApplicationContext(), result);
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-    public static void performJSEvent(String eventName,JSONObject result)
-    {
+    public static void performJSEvent(String eventName,JSONObject result) throws JSONException
+    {   
+        if(result==null) {
+            JSONArray inner = new JSONArray();
+            for(int i=0; i<itemsNotification.size(); i++) {
+                inner.put(beaconsData.get(itemsNotification.get(i)));
+            }
+            result = new JSONObject();
+            result.put("ibeacons",inner);
+        }
         final String jsStatement = String.format("cordova.fireDocumentEvent(\"%s\", %s);", eventName, result.toString());
         
         Log.v(TAG, "sendJavascript: " + jsStatement);
         String _d = "javascript:" + jsStatement;
 
-			  if (gWebView != null) {
-		          gWebView.sendJavascript(_d); 
-	    
-        	
+              if (gWebView != null) {
+                  gWebView.sendJavascript(_d); 
+        
+            
         }
 
       
@@ -318,18 +326,18 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
                     .setTicker(json.getString("message"))
                     .setContentTitle(json.getString("title"))
                     .setContentText(json.getString("message"))
-                    .setSmallIcon(context.getApplicationInfo().icon);
+                    .setSmallIcon(context.getApplicationInfo().icon)
+                    .setContentIntent(contentIntent);
         
-    NotificationCompat.InboxStyle inboxStyle =
-            new NotificationCompat.InboxStyle();
+    NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
    
     // Sets a title for the Inbox style big view
     inboxStyle.setBigContentTitle("Beacons");
   
     // Moves events into the big view
     for (int i=0; i < itemsNotification.size(); i++) {
-
-        inboxStyle.addLine(itemsNotification.get(i));
+        JSONObject beacon = beaconsData.get(itemsNotification.get(i));
+        inboxStyle.addLine(beacon.getString("title"));
     }
     // Moves the big view style object into the notification object.
     mBuilder.setStyle(inboxStyle);

@@ -50,12 +50,7 @@ public class BeaconNotificationHandler extends Activity{
 
 		if (extras != null)	{
 			JSONObject beacon = new JSONObject(extras.getBundle("beacon").getString("json"));
-            
-            beacon.put("foreground", false);
-            beacon.put("coldstart", !isBeaconPluginActive);
-            
-            GPIBeacon.performJSEvent(beacon.getString("event"),beacon);
-	
+			GPIBeacon.performJSEvent(beacon.getString("event"),null);
 			GPIBeacon.cancelNotification(this);
 		}
 	}
