@@ -41,7 +41,6 @@ import android.content.ServiceConnection;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.Time;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -75,7 +74,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
     private static final int NIGH_RSSI = -30;
     private static final int NIGH_FREQUENCY = 6 * 1000;
     private static final int PROXIMITY_NIGH = 100;
-   
+
     private static Activity activity;
     private boolean gForeground = false;
     private static CordovaWebView gWebView;
@@ -89,9 +88,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
     private Boolean firstNearFar;
 
     private CallbackContext callbackContext;
-    private static ArrayList<String> itemsNotification = new ArrayList<String>(); 
-    
-    
+
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -174,7 +171,6 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
                     Integer major = data2.getInt("major");
                     Integer minor = data2.getInt("minor");
                     beaconsData.put(iden, data2);
-                    
                     Region region = new Region(iden, uuid, major, minor);
                     iBeaconManager.startMonitoringBeaconsInRegion(region);
 //                  iBeaconManager.startMonitoringBeaconsInRegion(new Region("", null, null, null));
@@ -251,12 +247,11 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
             result.put("event", "ibeaconenter");
             
             if (this.gForeground) {
-            	
-                  performJSEvent(result.getString("event"),result);  
+                  performJSEvent(result.getString("event"),result);
             } else {
                 result.put("title", obj.getString("title"));
                 result.put("message", obj.getString("message"));
-                itemsNotification.add(obj.getString("title"));
+                // Send a notification if there is a message
                 createNotification(this.getApplicationContext(), result);
             }
         } catch (JSONException e) {
@@ -270,13 +265,9 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
         Log.v(TAG, "sendJavascript: " + jsStatement);
         String _d = "javascript:" + jsStatement;
 
-			  if (gWebView != null) {
-		          gWebView.sendJavascript(_d); 
-	    
-        	
+        if (gWebView != null) {
+            gWebView.sendJavascript(_d); 
         }
-
-      
  
 /*        cordova.getActivity().runOnUiThread(
             new Runnable() {
@@ -304,7 +295,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
     private static void createNotification(Context context, JSONObject json) throws JSONException {
         Bundle extra = new Bundle();
         extra.putString("json", json.toString());
-       
+        
         Intent notificationIntent = new Intent(activity, BeaconNotificationHandler.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         notificationIntent.putExtra("beacon",extra);
@@ -319,32 +310,24 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
                     .setContentTitle(json.getString("title"))
                     .setContentText(json.getString("message"))
                     .setSmallIcon(context.getApplicationInfo().icon);
+/*                new NotificationCompat.Builder(context)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setSmallIcon(context.getApplicationInfo().icon)
+                    .setWhen(System.currentTimeMillis())
+                    .setTicker(json.getString("title"))
+                    .setContentTitle(json.getString("message"))
+                    .setContentIntent(contentIntent);
+*/        
+        String message = json.getString("message");
+        if (message != null) {
+            mBuilder.setContentText(message);
+        } else {
+            mBuilder.setContentText("<missing message content>");
+        }
+        mBuilder.addAction(context.getApplicationInfo().icon, "Ver mas", contentIntent);
         
-    NotificationCompat.InboxStyle inboxStyle =
-            new NotificationCompat.InboxStyle();
-   
-    // Sets a title for the Inbox style big view
-    inboxStyle.setBigContentTitle("Beacons");
-  
-    // Moves events into the big view
-    for (int i=0; i < itemsNotification.size(); i++) {
-
-        inboxStyle.addLine(itemsNotification.get(i));
-    }
-    // Moves the big view style object into the notification object.
-    mBuilder.setStyle(inboxStyle);
-   
-    String message = json.getString("message");
-    if (message != null) {
-        mBuilder.setContentText(message);
-    } else {
-        mBuilder.setContentText("<missing message content>");
-    }
-    mBuilder.addAction(context.getApplicationInfo().icon, "Ver mas", contentIntent);
-    
-    ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
-        .notify((String) getAppName(context), NOTIFICATION_ID, mBuilder.build());
-
+        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
+            .notify((String) getAppName(context), NOTIFICATION_ID + json.getInt("identifier"), mBuilder.build());
     }
     @Override
     public void didExitRegion(Region region) {
@@ -475,11 +458,10 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer, Monitor
                 return "unknown";
         }
     }
-    public static void cancelNotification(Context context)
+    public static void cancelNotification(Context context, int beaconId)
     {
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.cancel((String)getAppName(context), NOTIFICATION_ID);  
-        itemsNotification.clear();
+        mNotificationManager.cancel((String)getAppName(context), NOTIFICATION_ID + beaconId);  
     }
     private static String getAppName(Context context)
     {

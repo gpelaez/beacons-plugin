@@ -53,10 +53,9 @@ public class BeaconNotificationHandler extends Activity{
             
             beacon.put("foreground", false);
             beacon.put("coldstart", !isBeaconPluginActive);
-            
-            GPIBeacon.performJSEvent(beacon.getString("event"),beacon);
-	
-			GPIBeacon.cancelNotification(this);
+
+			GPIBeacon.performJSEvent(beacon.getString("event"),beacon);
+			GPIBeacon.cancelNotification(this,beacon.getInt("identifier"));
 		}
 	}
 	/**
