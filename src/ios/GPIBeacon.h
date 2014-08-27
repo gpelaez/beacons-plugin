@@ -30,13 +30,19 @@ SOFTWARE.
 }
 
 @property (nonatomic, strong) CLLocationManager* locationManager;
-@property (strong, nonatomic) NSMutableDictionary *beaconDict;
+
+@property (strong, nonatomic) NSMutableDictionary *regionDict;
+@property (strong, nonatomic) NSDictionary *data;
+
 @property (strong, nonatomic) NSDate *lastNigh;
 @property (strong, nonatomic) NSDate *lastFar;
 
 //- (BOOL)hasIBeaconSupport;
 
 - (void)addRegion:(CDVInvokedUrlCommand*)command;
+- (void)addBeacon:(CDVInvokedUrlCommand*)command;
+- (void)addGeofence:(CDVInvokedUrlCommand*)command;
+- (void)setDefaults:(CDVInvokedUrlCommand*)command;
 
 - (void)locationManager:(CLLocationManager*)manager
        didFailWithError:(NSError*)error;

@@ -49,8 +49,48 @@ iBeaconExports.addRegion = function(successCallback, errorCallback, options) {
     options.uuid = getValue(options.uuid, '');
     options.major = getValue(options.major, null);
     options.minor = getValue(options.minor, null);
+    options.title = getValue(options.title, null);
+    options.message = getValue(options.message, null);
 
     exec(successCallback, errorCallback, "GPIBeacon", "addRegion", [options]);
+};
+iBeaconExports.setDefaults = function(successCallback, errorCallback, options) {
+    argscheck.checkArgs('fFO', 'iBeacon.setDefaults', arguments);
+    options = options || {};
+    var getValue = argscheck.getValue;
+
+    options.title = getValue(options.title, 'Smart Savings');
+    options.message = getValue(options.message, 'Encontramos promociones para tí.');
+
+    exec(successCallback, errorCallback, "GPIBeacon", "setDefaults", [options]);
+};
+iBeaconExports.addBeacon = function(successCallback, errorCallback, options) {
+    argscheck.checkArgs('fFO', 'iBeacon.addBeacon', arguments);
+    options = options || {};
+    var getValue = argscheck.getValue;
+
+    options.identifier = getValue(options.identifier, 'defaultRegion');
+    options.uuid = getValue(options.uuid, '');
+    options.major = getValue(options.major, null);
+    options.minor = getValue(options.minor, null);
+    options.title = getValue(options.title, null);
+    options.message = getValue(options.message, null);
+
+    exec(successCallback, errorCallback, "GPIBeacon", "addBeacon", [options]);
+};
+iBeaconExports.addGeofence = function(successCallback, errorCallback, options) {
+    argscheck.checkArgs('fFO', 'iBeacon.addGeofence', arguments);
+    options = options || {};
+    var getValue = argscheck.getValue;
+
+    options.identifier = getValue(options.identifier, 'defaultRegion');
+    options.lat = options.lat;
+    options.lon = options.lon;
+    options.radius = getValue(options.minor, 12);
+    options.title = getValue(options.title, null);
+    options.message = getValue(options.message, null);
+
+    exec(successCallback, errorCallback, "GPIBeacon", "addGeofence", [options]);
 };
 
 
