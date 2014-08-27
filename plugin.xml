@@ -37,7 +37,6 @@
         <source-file src="src/android/LocationChangedListener.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
         <source-file src="src/android/LocationManagerService.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
         <source-file src="src/android/ProximityReceiver.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
-        <source-file src="src/android/SimpleGeofence.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GPIBeacon">

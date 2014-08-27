@@ -8,7 +8,7 @@ iBeacon plugin.
     
     cordova plugin add https://github.com/gpelaez/beacons-plugin.git
 
-# Watch a region/UUID
+# Watch a beacon region/UUID
     cordova.plugins.ibeacon.addRegion(
         // Success Callback
         function() {
@@ -24,7 +24,29 @@ iBeacon plugin.
             uuid: 'MY-UUID',
             major: <beacon-major>,
             minor: <beacon-minor>,
-            title: <title-for-local-notifications>
+            title: <title-for-local-notifications>,
+            message: <message-for-local-notification>
+        }
+    );
+
+# Watch a geofence circular region (latitude, longitude, radius)
+    cordova.plugins.ibeacon.addGeofence(
+        // Success Callback
+        function() {
+            console.log('added successfully') ;
+        }, 
+        // Error Callback
+        function() { 
+            console.log('oh no! error');
+        }, 
+        // Params
+        { 
+            identifier: 'com.mydomain.ibeacon.myregion', 
+            lat: <latitude>, // doble
+            lon: <longitude>, // double
+            radius: <radius>, // long integer
+            title: <title-for-local-notifications>,
+            message: <message-for-local-notification>
         }
     );
 
@@ -65,6 +87,25 @@ Called when a region is exited.
     {
         // event data
         ibeacon: {
+            identifier: 'com.mydomain.ibeacon.myregion'
+        }
+    }
+
+## geofenceenter
+Called when a enter to geofence region.
+
+    {
+        // event data
+        geofence: {
+            identifier: 'com.mydomain.ibeacon.myregion'
+        }
+    }
+## geofenceleave
+Called when a leaving a geofence region.
+
+    {
+        // event data
+        geofence: {
             identifier: 'com.mydomain.ibeacon.myregion'
         }
     }
