@@ -25,7 +25,7 @@ package me.gpelaez.cordova.plugins.ibeacon;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -76,7 +76,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 	private static Activity activity;
 	private boolean gForeground = false;
 	private static CordovaWebView gWebView;
-	private static Hashtable<String, JSONObject> beaconsData;
+	private static HashMap<String, JSONObject> beaconsData;
 	private static ArrayList<String> itemsNotification = new ArrayList<String>();
 
 	private IBeaconManager iBeaconManager;
@@ -101,7 +101,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 		this.lastFar = new Time();
 		this.lastFar.setToNow();
 		this.firstNearFar = true;
-		beaconsData = new Hashtable<String, JSONObject>();
+		beaconsData = new HashMap<String, JSONObject>();
 
 		cordova.getThreadPool().execute(new Runnable() {
 			@Override
@@ -242,7 +242,6 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 			}
 			result = new JSONObject();
 			result.put("ibeacons", inner);
-			
 		}
 
 		String jsStatement = String.format(
@@ -256,15 +255,6 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 			gWebView.sendJavascript(_d);
 
 		}
-
-		// cordova.getActivity().runOnUiThread(new Runnable() {
-		//
-		// @Override
-		// public void run() {
-		// webView.loadUrl(_d);
-		// }
-		// });
-
 	}
 
 	/**
@@ -304,7 +294,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 		// Moves events into the big view
 		for (int i = 0; i < itemsNotification.size(); i++) {
 			JSONObject beacon = beaconsData.get(itemsNotification.get(i));
-			inboxStyle.addLine(beacon.getString("title"));
+			inboxStyle.addLine(beacon.getString("message"));
 		}
 		// Moves the big view style object into the notification object.
 		mBuilder.setStyle(inboxStyle);
@@ -349,22 +339,11 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 				iBeaconManager.startRangingBeaconsInRegion(region);
 				iBeaconManager.setRangeNotifier(this);
 			}
-			result.put("event", "ibeaconmsg");
-			performJSEvent(result.getString("event"), result);
+			if (this.gForeground) {
+				result.put("event", "ibeaconenter");
+				performJSEvent(result.getString("event"), result);
+			}
 			
-
-			
-			// else {
-			// JSONObject obj = beaconsData.get(region.getUniqueId());
-			// obj.put("foreground", this.gForeground);
-			// JSONObject result = new JSONObject();
-			// result.put("ibeacon", obj);
-			// result.put("event", "ibeaconenter");
-			// result.put("title", obj.getString("title"));
-			// result.put("message", obj.getString("message"));
-			// itemsNotification.add(obj.getString("identifier"));
-			// createNotification(this.getApplicationContext(), result);
-			// }
 		} catch (JSONException | RemoteException e) {
 			Log.e(TAG, e.getLocalizedMessage());
 		}
@@ -375,25 +354,28 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 		Log.d(TAG, "I no longer see an iBeacon");
 
 		try {
+			JSONObject obj = beaconsData.get(region.getUniqueId());
+			obj.put("foreground", this.gForeground);
+
+			JSONObject result = new JSONObject();
+			result.put("ibeacon", obj);
+			
+			if (obj.has("range") && obj.getString("range").equalsIgnoreCase("exit")) {
+				result.put("event", "ibeaconmsg");
+				if(this.gForeground) {
+					performJSEvent(result.getString("event"), result);
+				} else {
+					itemsNotification.add(obj.getString("identifier"));
+					createNotification(this.getApplicationContext(), result);
+				}
+			}
+			
 			iBeaconManager.stopRangingBeaconsInRegion(region);
-
+			
 			if (this.gForeground) {
-				JSONObject obj = beaconsData.get(region.getUniqueId());
-				obj.put("foreground", this.gForeground);
-
-				JSONObject result = new JSONObject();
-				result.put("ibeacon", obj);
 				result.put("event", "ibeaconexit");
-
 				performJSEvent(result.getString("event"), result);
 			}
-
-			// cordova.getActivity().runOnUiThread(new Runnable() {
-			// @Override
-			// public void run() {
-			// webView.loadUrl("javascript:" + jsStatement);
-			// }
-			// });
 
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -461,7 +443,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 			String displayString = iBeacon.getProximityUuid() + " "
 					+ iBeacon.getMajor() + " " + iBeacon.getMinor() + "\n"
 					+ "Welcome message:" + iBeaconData.get("welcomeMessage");
-
+			Log.d(TAG,displayString);
 		}
 	}
 
