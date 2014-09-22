@@ -50,7 +50,7 @@ public class BeaconNotificationHandler extends Activity{
 
 		if (extras != null)	{
 			JSONObject beacon = new JSONObject(extras.getBundle("beacon").getString("json"));
-			GPIBeacon.performJSEvent(beacon.getString("event"),null);
+			GPIBeacon.performJSEvent(beacon.getString("event"),beacon);
 			GPIBeacon.cancelNotification(this);
 		}
 	}
