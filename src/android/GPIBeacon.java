@@ -68,9 +68,9 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 
 	private static final String ACTION_ADDREGION = "addRegion";
 
-	private static final int NEAR_FAR_FREQUENCY = 1 * 60 * 1000;
+	private static final int NEAR_FAR_FREQUENCY = 1 * 5 * 1000;
 	private static final int NIGH_RSSI = -30;
-	private static final int NIGH_FREQUENCY = 6 * 1000;
+	private static final int NIGH_FREQUENCY = 200;
 	private static final int PROXIMITY_NIGH = 100;
 
 	private static Activity activity;
@@ -276,13 +276,20 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
+		
+		JSONObject obj = json.getJSONObject("ibeacon");
+		String message = obj.getString("message");
+		String title = obj.getString("title");
+		if(title==null || title=="") {
+			title = context.getApplicationInfo().name;
+		}
+		
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
 				context).setDefaults(Notification.DEFAULT_ALL)
 				.setWhen(System.currentTimeMillis())
-				.setTicker(json.getString("message"))
-				.setContentTitle(json.getString("title"))
-				.setContentText(json.getString("message"))
+				.setTicker(message)
+				.setContentTitle(title)
+				.setContentText(message)
 				.setSmallIcon(context.getApplicationInfo().icon)
 				.setContentIntent(contentIntent);
 
@@ -299,7 +306,6 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 		// Moves the big view style object into the notification object.
 		mBuilder.setStyle(inboxStyle);
 
-		String message = json.getString("message");
 		if (message != null) {
 			mBuilder.setContentText(message);
 		} else {
@@ -327,7 +333,15 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 			JSONObject result = new JSONObject();
 			result.put("ibeacon", obj);
 
-			if (obj.has("range") && obj.getString("range").equalsIgnoreCase("enter")) {
+			if (!obj.has("range")) {
+				result.put("event", "ibeaconmsg");
+				if(this.gForeground) {
+					performJSEvent(result.getString("event"), result);
+				} else {
+					itemsNotification.add(obj.getString("identifier"));
+					createNotification(this.getApplicationContext(), result);
+				}
+			} else if (obj.getString("range").equalsIgnoreCase("enter")) {
 				result.put("event", "ibeaconmsg");
 				if(this.gForeground) {
 					performJSEvent(result.getString("event"), result);

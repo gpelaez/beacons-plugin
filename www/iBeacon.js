@@ -40,6 +40,16 @@ for (var key in Constants) {
     iBeaconExports[key] = Constants[key];
 }
 
+iBeaconExports.setDefaults = function(successCallback, errorCallback, options) {
+    argscheck.checkArgs('fFO', 'iBeacon.setDefaults', arguments);
+    options = options || {};
+    var getValue = argscheck.getValue;
+
+    options.title = getValue(options.title, 'Smart Savings');
+    options.message = getValue(options.message, 'Encontramos promociones para tí.');
+
+    exec(successCallback, errorCallback, "GPIBeacon", "setDefaults", [options]);
+};
 iBeaconExports.addRegion = function(successCallback, errorCallback, options) {
     argscheck.checkArgs('fFO', 'iBeacon.addRegion', arguments);
     options = options || {};
@@ -51,18 +61,9 @@ iBeaconExports.addRegion = function(successCallback, errorCallback, options) {
     options.minor = getValue(options.minor, null);
     options.title = getValue(options.title, null);
     options.message = getValue(options.message, null);
+    options.range = getValue(options.range, null);
 
     exec(successCallback, errorCallback, "GPIBeacon", "addRegion", [options]);
-};
-iBeaconExports.setDefaults = function(successCallback, errorCallback, options) {
-    argscheck.checkArgs('fFO', 'iBeacon.setDefaults', arguments);
-    options = options || {};
-    var getValue = argscheck.getValue;
-
-    options.title = getValue(options.title, 'Smart Savings');
-    options.message = getValue(options.message, 'Encontramos promociones para tí.');
-
-    exec(successCallback, errorCallback, "GPIBeacon", "setDefaults", [options]);
 };
 iBeaconExports.addBeacon = function(successCallback, errorCallback, options) {
     argscheck.checkArgs('fFO', 'iBeacon.addBeacon', arguments);
@@ -73,8 +74,10 @@ iBeaconExports.addBeacon = function(successCallback, errorCallback, options) {
     options.uuid = getValue(options.uuid, '');
     options.major = getValue(options.major, null);
     options.minor = getValue(options.minor, null);
+    options.range = getValue(options.range, null);
     options.title = getValue(options.title, null);
     options.message = getValue(options.message, null);
+    options.range = getValue(options.range, null);
 
     exec(successCallback, errorCallback, "GPIBeacon", "addBeacon", [options]);
 };

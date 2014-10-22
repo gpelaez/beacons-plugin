@@ -31,6 +31,7 @@
 @implementation GPIBeacon
 
 static int NIGH_PROXIMITY = -30;
+#define IS_OS_8_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0)
 
 @synthesize locationManager;
 
@@ -51,6 +52,12 @@ static int NIGH_PROXIMITY = -30;
                      @"Ver", @"action",
                      UILocalNotificationDefaultSoundName, @"sound",
                      nil];
+        
+        if(IS_OS_8_OR_LATER) {
+            [self.locationManager requestAlwaysAuthorization];
+        }
+        
+        [self.locationManager startUpdatingLocation];
     }
     return self;
 }
@@ -196,7 +203,7 @@ static int NIGH_PROXIMITY = -30;
     
     notification.fireDate = [NSDate date];
     notification.timeZone = [NSTimeZone defaultTimeZone];
-    notification.userInfo = data;
+    notification.userInfo = [NSDictionary dictionaryWithDictionary:data];
     
 
     
@@ -221,6 +228,8 @@ static int NIGH_PROXIMITY = -30;
         
         [self notifyWithTitle:title andMessage:msg andData:dict];
         
+        
+        
 //        UIAlertView* alert =[[UIAlertView alloc] initWithTitle:title message:msg delegate:self cancelButtonTitle:@"Cancelar" otherButtonTitles:nil];
 //        [alert show];
         NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"region", nil];
@@ -230,7 +239,7 @@ static int NIGH_PROXIMITY = -30;
         
         // Start Ranging Beacon
         if([region isKindOfClass:[CLBeaconRegion class]] && [self.data objectForKey:@"rangeBeacons"]) {
-            [self.locationManager startRangingBeaconsInRegion: region];
+            [self.locationManager startRangingBeaconsInRegion: (CLBeaconRegion *) region];
         }
     }
 }
@@ -260,7 +269,7 @@ static int NIGH_PROXIMITY = -30;
        didRangeBeacons:(NSArray*)beacons
               inRegion:(CLBeaconRegion*)region
 {
-    // Beacon found!
+    
     if (beacons.count > 0) {
         
         CLBeacon *foundBeacon = [beacons firstObject];
@@ -294,6 +303,38 @@ static int NIGH_PROXIMITY = -30;
                     break;
             }
         }
+    } else  {
+        NSLog(@"Entered region..%@", region.identifier);
+        NSDictionary* dict = [self.regionDict objectForKey:region.identifier];
+        NSDate *lastNotification = [dict objectForKey:@"lastNotification"];
+        NSDate *now = [[NSDate alloc] init];
+        
+        NSTimeInterval diff = [now timeIntervalSinceDate:lastNotification];
+        
+        if(diff < 100) {
+            return;
+        }
+        NSMutableDictionary *aux = [dict mutableCopy];
+        [aux setObject:[NSDate date] forKey:@"lastNotification"];
+        [self.regionDict setObject:[NSDictionary dictionaryWithDictionary:aux] forKey:region.identifier];
+        
+        NSString *title = [dict objectForKey:@"title"];
+        if(!title) {
+            title = [self.data objectForKey:@"title"];
+        }
+        NSString *msg = [dict objectForKey:@"message"];
+        if(msg) {
+            msg = [self.data objectForKey:@"message"];
+        }
+        
+        [self notifyWithTitle:title andMessage:msg andData:dict];
+        
+        
+//        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"region", nil];
+//        
+//        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [result JSONString]];
+//        [self.commandDelegate evalJs:jsStatement];
+        
     }
     
 }
@@ -318,7 +359,7 @@ static int NIGH_PROXIMITY = -30;
 {
     //    NSLog(@"hello %@", region.identifier);
     if([region isKindOfClass:[CLBeaconRegion class]]) {
-        //        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
+        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
     }
 }
 
@@ -374,7 +415,7 @@ static int NIGH_PROXIMITY = -30;
     //send javascript
     NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:userInfo,@"region", nil];
     
-    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [result JSONString]];
+    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconmsg', %@);", [result JSONString]];
     [self.commandDelegate evalJs:jsStatement];
 
 }
@@ -414,6 +455,4 @@ static int NIGH_PROXIMITY = -30;
                                name:UIApplicationDidFinishLaunchingNotification
                              object:nil];
 }
-
-
 @end
