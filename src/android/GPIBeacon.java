@@ -341,7 +341,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 					itemsNotification.add(obj.getString("identifier"));
 					createNotification(this.getApplicationContext(), result);
 				}
-			} else if (obj.getString("range").equalsIgnoreCase("enter")) {
+			} else if (obj.get("range")==null || obj.getString("range").equalsIgnoreCase("enter")) {
 				result.put("event", "ibeaconmsg");
 				if(this.gForeground) {
 					performJSEvent(result.getString("event"), result);
@@ -402,7 +402,7 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 	public void didDetermineStateForRegion(int state, Region region) {
 		// logToDisplay("I have just switched from seeing/not seeing iBeacons: "+state);
 		Log.d(TAG, "I have just switched from seeing/not seeing iBeacons: "
-				+ state);
+				+ region.getUniqueId());
 	}
 
 	@Override

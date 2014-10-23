@@ -52,12 +52,12 @@ static int NIGH_PROXIMITY = -30;
                      @"Ver", @"action",
                      UILocalNotificationDefaultSoundName, @"sound",
                      nil];
-        
-        if(IS_OS_8_OR_LATER) {
+        if([self.locationManager respondsToSelector:@selector(requestAlwaysAuthorization)]) {
             [self.locationManager requestAlwaysAuthorization];
+//            [self.locationManager startUpdatingLocation];
         }
-        
         [self.locationManager startUpdatingLocation];
+        
     }
     return self;
 }
@@ -69,21 +69,8 @@ static int NIGH_PROXIMITY = -30;
         @try {
             NSArray* arguments = command.arguments;
             NSDictionary* dictionary = [arguments objectAtIndex:0];
-            NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[dictionary objectForKey:@"uuid"]];
-            int major =  [[NSString stringWithString:[dictionary objectForKey:@"major"]] intValue];
-            int minor =  [[NSString stringWithString:[dictionary objectForKey:@"minor"]] intValue];
-            NSString* identifier = [dictionary objectForKey:@"identifier"];
-            
-            CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid major:major minor:minor identifier:identifier];
-            if(myRegion) {
-                [self.regionDict setObject:dictionary forKey:identifier];
-                [self.locationManager startMonitoringForRegion: myRegion];
-                
-                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-                [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-                
-                NSLog(@"Region added: %@", [myRegion description]);
-            }
+            CDVPluginResult* result = [self actionMonitorBeaconRegion:dictionary];
+            [self.commandDelegate sendPluginResult:result callbackId:callbackId];
         }
         @catch(NSException * e) {
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -91,6 +78,61 @@ static int NIGH_PROXIMITY = -30;
             
         }
     }];
+}
+- (void)addRegion:(CDVInvokedUrlCommand*)command
+{
+    [self.commandDelegate runInBackground:^{
+        
+        NSString* callbackId = command.callbackId;
+        
+        @try {
+            NSArray* arguments = command.arguments;
+            NSDictionary* dictionary = [arguments objectAtIndex:0];
+            
+            CDVPluginResult* result = [self actionMonitorBeaconRegion:dictionary];
+            [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+
+        }
+        @catch (NSException * e) {
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+            [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+            
+            //        NSLog(@"Error adding region: %@", [myRegion description]);
+        }
+    }];
+}
+- (CDVPluginResult *)actionMonitorBeaconRegion:(NSDictionary *)regionDict
+{
+    
+    //        NSString* strUUID = [dictionary objectForKey:@"uuid"];
+    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[regionDict objectForKey:@"uuid"]];
+    int major =  [[NSString stringWithString:[regionDict objectForKey:@"major"]] intValue];
+    int minor =  [[NSString stringWithString:[regionDict objectForKey:@"minor"]] intValue];
+    NSString* identifier = [regionDict objectForKey:@"identifier"];
+    
+    NSObject *range =  [regionDict objectForKey:@"range"];
+    if ([range isKindOfClass:[NSNull class]]) {
+        [regionDict setValue:@"enter" forKey:@"range"];
+    }
+    
+    CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid major:major minor:minor identifier:identifier];
+    CDVPluginResult* result = nil;
+    if(myRegion) {
+        myRegion.notifyOnEntry = YES;
+        myRegion.notifyOnExit = YES;
+        myRegion.notifyEntryStateOnDisplay=YES;
+        
+        [self.regionDict setObject:regionDict forKey:identifier];
+        [self.locationManager startMonitoringForRegion: myRegion];
+        
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        
+        
+        NSLog(@"Region added: %@", [myRegion description]);
+    } else {
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    }
+    return result;
 }
 - (void)addGeofence:(CDVInvokedUrlCommand *)command
 {
@@ -148,40 +190,6 @@ static int NIGH_PROXIMITY = -30;
         }
     }];
 }
-- (void)addRegion:(CDVInvokedUrlCommand*)command
-{
-    [self.commandDelegate runInBackground:^{
-        
-        NSString* callbackId = command.callbackId;
-        
-        @try {
-            NSArray* arguments = command.arguments;
-            NSDictionary* dictionary = [arguments objectAtIndex:0];
-            //        NSString* strUUID = [dictionary objectForKey:@"uuid"];
-            NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:[dictionary objectForKey:@"uuid"]];
-            int major =  [[NSString stringWithString:[dictionary objectForKey:@"major"]] intValue];
-            int minor =  [[NSString stringWithString:[dictionary objectForKey:@"minor"]] intValue];
-            NSString* identifier = [dictionary objectForKey:@"identifier"];
-            
-            CLBeaconRegion *myRegion = [[CLBeaconRegion alloc] initWithProximityUUID:uuid major:major minor:minor identifier:identifier];
-            if(myRegion) {
-                [self.regionDict setObject:dictionary forKey:identifier];
-                [self.locationManager startMonitoringForRegion: myRegion];
-                
-                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-                [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-                
-                NSLog(@"Region added: %@", [myRegion description]);
-            }
-        }
-        @catch (NSException * e) {
-            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-            [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-            
-            //        NSLog(@"Error adding region: %@", [myRegion description]);
-        }
-    }];
-}
 
 
 #pragma mark -
@@ -191,7 +199,7 @@ static int NIGH_PROXIMITY = -30;
     UILocalNotification *notification = [[UILocalNotification alloc] init];
     
     // mensaje que saldrá en la alerta
-    notification.alertBody = [NSString stringWithFormat:@"%@\n%@", title, message];
+    notification.alertBody = [NSString stringWithFormat:@"%@ \n %@", title, message];
     // sonido por defecto
     notification.soundName = UILocalNotificationDefaultSoundName;
     // título del botón
@@ -203,7 +211,7 @@ static int NIGH_PROXIMITY = -30;
     
     notification.fireDate = [NSDate date];
     notification.timeZone = [NSTimeZone defaultTimeZone];
-    notification.userInfo = [NSDictionary dictionaryWithDictionary:data];
+    notification.userInfo = data;
     
 
     
@@ -213,34 +221,27 @@ static int NIGH_PROXIMITY = -30;
 - (void)locationManager:(CLLocationManager*)manager didEnterRegion:(CLRegion*)region
 {
     if([region isKindOfClass:[CLBeaconRegion class]] || [region isKindOfClass:[CLCircularRegion class]]) {
-        //        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
         NSLog(@"Entered region..%@", region.identifier);
-        NSDictionary* dict = [self.regionDict objectForKey:region.identifier];
         
+        NSDictionary* dict = [self.regionDict objectForKey:region.identifier];
         NSString *title = [dict objectForKey:@"title"];
+        NSString *msg = [dict objectForKey:@"message"];
+        if(!msg) {
+            msg = [self.data objectForKey:@"message"];
+        }
         if(!title) {
             title = [self.data objectForKey:@"title"];
         }
-        NSString *msg = [dict objectForKey:@"message"];
-        if(msg) {
-            msg = [self.data objectForKey:@"message"];
+        if ([region isKindOfClass:[CLCircularRegion class]] || [dict objectForKey:@"range"]==nil || [[dict objectForKey:@"range"] isEqualToString:@"enter"]) {
+            [self notifyWithTitle:title andMessage:msg andData:dict];
+        } else if([region isKindOfClass:[CLBeaconRegion class]]) {
+            [manager startRangingBeaconsInRegion: (CLBeaconRegion *) region];
         }
         
-        [self notifyWithTitle:title andMessage:msg andData:dict];
-        
-        
-        
-//        UIAlertView* alert =[[UIAlertView alloc] initWithTitle:title message:msg delegate:self cancelButtonTitle:@"Cancelar" otherButtonTitles:nil];
-//        [alert show];
-        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"region", nil];
-        
+        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"ibeacon", nil];
         NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [result JSONString]];
         [self.commandDelegate evalJs:jsStatement];
-        
-        // Start Ranging Beacon
-        if([region isKindOfClass:[CLBeaconRegion class]] && [self.data objectForKey:@"rangeBeacons"]) {
-            [self.locationManager startRangingBeaconsInRegion: (CLBeaconRegion *) region];
-        }
+
     }
 }
 
@@ -259,8 +260,8 @@ static int NIGH_PROXIMITY = -30;
         [self.commandDelegate evalJs:jsStatement];
         
         //Stop ranging beacon
-        if([region isKindOfClass:[CLBeaconRegion class]] && [self.data objectForKey:@"rangeBeacons"]) {
-            [self.locationManager stopRangingBeaconsInRegion:(CLBeaconRegion *) region];
+        if([region isKindOfClass:[CLBeaconRegion class]]) {
+            [manager stopRangingBeaconsInRegion:(CLBeaconRegion *) region];
         }
     }
 }
@@ -330,13 +331,31 @@ static int NIGH_PROXIMITY = -30;
         [self notifyWithTitle:title andMessage:msg andData:dict];
         
         
-//        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"region", nil];
+//        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"ibeacon", nil];
 //        
 //        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconenter', %@);", [result JSONString]];
 //        [self.commandDelegate evalJs:jsStatement];
         
     }
     
+}
+-(void)locationManager:(CLLocationManager *)manager didDetermineState:(CLRegionState)state forRegion:(CLRegion *)region
+{
+    
+}
+
+- (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region
+{
+    if([region isKindOfClass:[CLBeaconRegion class]]) {
+        [self.locationManager requestStateForRegion:(CLBeaconRegion *)region];
+    }
+}
+
+- (void)locationManager: (CLLocationManager *)manager
+       didFailWithError: (NSError *)error
+{
+//    [manager stopUpdatingLocation];
+    NSLog(@"%@",error);
 }
 
 - (void)sendIbeaconEvent:(CLBeacon *)foundBeacon forRegion:(CLRegion *) region forRange:(NSString *) range
@@ -349,26 +368,11 @@ static int NIGH_PROXIMITY = -30;
     
     NSLog(@"%@", [result JSONString]);
     
-    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeacon', %@);", [result JSONString]];
+    NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconmsg', %@);", [result JSONString]];
     
     [self.commandDelegate evalJs:jsStatement];
 }
 
-
-- (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region
-{
-    //    NSLog(@"hello %@", region.identifier);
-    if([region isKindOfClass:[CLBeaconRegion class]]) {
-        [self.locationManager startRangingBeaconsInRegion:(CLBeaconRegion *)region];
-    }
-}
-
-- (void)locationManager: (CLLocationManager *)manager
-       didFailWithError: (NSError *)error
-{
-    [manager stopUpdatingLocation];
-    NSLog(@"error%@",error);
-}
 
 - (void)dealloc
 {
@@ -413,7 +417,7 @@ static int NIGH_PROXIMITY = -30;
     [[UIApplication sharedApplication] cancelLocalNotification:notification];
     
     //send javascript
-    NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:userInfo,@"region", nil];
+    NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:userInfo,@"ibeacon", nil];
     
     NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconmsg', %@);", [result JSONString]];
     [self.commandDelegate evalJs:jsStatement];
@@ -454,5 +458,9 @@ static int NIGH_PROXIMITY = -30;
                            selector:@selector(didFinishLaunchingWithOptions:)
                                name:UIApplicationDidFinishLaunchingNotification
                              object:nil];
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+        [[UIApplication sharedApplication] registerUserNotificationSettings:[UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert|UIUserNotificationTypeBadge|UIUserNotificationTypeSound categories:nil]];
+    }
+
 }
 @end
