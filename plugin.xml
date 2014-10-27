@@ -34,10 +34,6 @@
 
         <source-file src="src/android/GPIBeacon.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
         <source-file src="src/android/BeaconNotificationHandler.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
-<!--         <source-file src="src/android/LocationChangedListener.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
-        <source-file src="src/android/LocationManagerService.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
-        <source-file src="src/android/ProximityReceiver.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
- -->
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GPIBeacon">
                 <param name="android-package" value="me.gpelaez.cordova.plugins.ibeacon.GPIBeacon" />
@@ -70,12 +66,6 @@
                 </intent-filter>
             </service>
             <activity android:name="me.gpelaez.cordova.plugins.ibeacon.BeaconNotificationHandler"/>
-            <!-- <receiver android:name="me.gpelaez.cordova.plugins.ibeacon.ProximityReceiver">
-                <intent-filter>
-                    <action android:name="LocationManagerProximityAlert"/>
-                    <category android:name="android.intent.category.DEFAULT" />
-                </intent-filter>
-            </receiver> -->
         </config-file>
 
     </platform>

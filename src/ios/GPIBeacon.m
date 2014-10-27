@@ -224,17 +224,19 @@ static int NIGH_PROXIMITY = -30;
         NSLog(@"Entered region..%@", region.identifier);
         
         NSDictionary* dict = [self.regionDict objectForKey:region.identifier];
-        NSString *title = [dict objectForKey:@"title"];
-        NSString *msg = [dict objectForKey:@"message"];
-        if(!msg) {
-            msg = [self.data objectForKey:@"message"];
-        }
-        if(!title) {
-            title = [self.data objectForKey:@"title"];
-        }
+        
         if ([region isKindOfClass:[CLCircularRegion class]] || [dict objectForKey:@"range"]==nil || [[dict objectForKey:@"range"] isEqualToString:@"enter"]) {
+            NSString *title = [dict objectForKey:@"title"];
+            NSString *msg = [dict objectForKey:@"message"];
+            if(!msg) {
+                msg = [self.data objectForKey:@"message"];
+            }
+            if(!title) {
+                title = [self.data objectForKey:@"title"];
+            }
             [self notifyWithTitle:title andMessage:msg andData:dict];
         } else if([region isKindOfClass:[CLBeaconRegion class]]) {
+            // Start ranging beacons if already launched a message
             [manager startRangingBeaconsInRegion: (CLBeaconRegion *) region];
         }
         
@@ -249,20 +251,31 @@ static int NIGH_PROXIMITY = -30;
 {
     //    Do not range beacons... just notify when ibeacon found. Battery consumption issues.
     if([region isKindOfClass:[CLBeaconRegion class]] || [region isKindOfClass:[CLCircularRegion class]]) {
-        NSLog(@"Exited region..%@", region.identifier);
-        NSDictionary* beacon = [self.regionDict objectForKey:region.identifier];
+        NSLog(@"Exit region..%@", region.identifier);
+        NSDictionary* dict = [self.regionDict objectForKey:region.identifier];
         // [self.locationManager stopRangingBeaconsInRegion: self.beaconDict[region.identifier]];
         
-        NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-        [result setObject:beacon forKey:@"ibeacon"];
-        
-        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconexit', %@);", [result JSONString]];
-        [self.commandDelegate evalJs:jsStatement];
-        
+        if ([region isKindOfClass:[CLBeaconRegion class]] && [[dict objectForKey:@"range"] isEqualToString:@"exit"]) {
+            NSString *title = [dict objectForKey:@"title"];
+            NSString *msg = [dict objectForKey:@"message"];
+            if(!msg) {
+                msg = [self.data objectForKey:@"message"];
+            }
+            if(!title) {
+                title = [self.data objectForKey:@"title"];
+            }
+            [self notifyWithTitle:title andMessage:msg andData:dict];
+        }
         //Stop ranging beacon
         if([region isKindOfClass:[CLBeaconRegion class]]) {
             [manager stopRangingBeaconsInRegion:(CLBeaconRegion *) region];
         }
+        
+        NSDictionary *result = [NSDictionary dictionaryWithObjectsAndKeys:dict,@"ibeacon", nil];
+        NSString *jsStatement = [NSString stringWithFormat:@"cordova.fireDocumentEvent('ibeaconexit', %@);", [result JSONString]];
+        [self.commandDelegate evalJs:jsStatement];
+        
+       
     }
 }
 
