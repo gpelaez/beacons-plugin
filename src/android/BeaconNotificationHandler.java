@@ -1,4 +1,4 @@
-package me.gpelaez.cordova.plugins.ibeacon;
+package com.ingeneo.cordova.plugins.ibeacon;
 
 import org.json.JSONException;
 import org.json.JSONObject;

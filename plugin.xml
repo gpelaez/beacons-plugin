@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="me.gpelaez.cordova.plugins.ibeacon"
-    version="0.0.1">
+    id="com.ingeneo.cordova.plugins.ibeacon"
+    version="0.0.2">
 
-    <name>IBeacons Handler</name>
-    <description>iBeacons Handle Plugin</description>
+    <name>iBeacons Notifications</name>
+    <description>iBeacons Local Notifications Plugin</description>
     <license>MIT</license>
 
     <engines>
@@ -37,11 +37,11 @@
 
     <platform name="android">
 
-        <source-file src="src/android/GPIBeacon.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
-        <source-file src="src/android/BeaconNotificationHandler.java" target-dir="src/me/gpelaez/cordova/plugins/ibeacon/" />
+        <source-file src="src/android/GPIBeacon.java" target-dir="src/com/ingeneo/cordova/plugins/ibeacon/" />
+        <source-file src="src/android/BeaconNotificationHandler.java" target-dir="src/com/ingeneo/cordova/plugins/ibeacon/" />
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="GPIBeacon">
-                <param name="android-package" value="me.gpelaez.cordova.plugins.ibeacon.GPIBeacon" />
+                <param name="android-package" value="com.ingeneo.cordova.plugins.ibeacon.GPIBeacon" />
                 <param name="onload" value="true" />
             </feature>
         </config-file>
@@ -70,7 +70,7 @@
                     <action android:name="$PACKAGE_NAME.DID_MONITORING" />
                 </intent-filter>
             </service>
-            <activity android:name="me.gpelaez.cordova.plugins.ibeacon.BeaconNotificationHandler"/>
+            <activity android:name="com.ingeneo.cordova.plugins.ibeacon.BeaconNotificationHandler"/>
         </config-file>
 
     </platform>

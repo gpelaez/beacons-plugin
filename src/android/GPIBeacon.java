@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-package me.gpelaez.cordova.plugins.ibeacon;
+package com.ingeneo.cordova.plugins.ibeacon;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -358,7 +358,9 @@ public class GPIBeacon extends CordovaPlugin implements IBeaconConsumer,
 				performJSEvent(result.getString("event"), result);
 			}
 			
-		} catch (JSONException | RemoteException e) {
+		} catch (RemoteException e) {
+			Log.e(TAG, e.getLocalizedMessage());
+		} catch (JSONException e) {
 			Log.e(TAG, e.getLocalizedMessage());
 		}
 	}
